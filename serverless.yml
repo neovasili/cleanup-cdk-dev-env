@@ -1,0 +1,61 @@
+---
+service: clean-dev-cdk
+frameworkVersion: ">=1.81.0"
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: ${ opt:stage, staging }
+  region: ${ opt:aws-region, eu-west-1 }
+  timeout: 10
+  memorySize: 128
+  logRetentionInDays: 14
+  versionFunctions: false
+
+custom:
+  service_base_name: ${ self:service }-${ self:provider.stage }-
+  pythonRequirements:
+    pythonBin: /usr/bin/python3
+    dockerizePip: non-linux
+    layer:
+      name: ${ self:custom.service_base_name }
+      description: Python requirements lambda layer
+      compatibleRuntimes:
+        - python3.8
+      licenseInfo: GPLv3
+      allowedAccounts:
+        - '*'
+
+package:
+  individually: true
+  include:
+    - src/helper/boto.py
+    - src/helper/service.py
+    - src/model/state.py
+    - src/*/cw.py
+  exclude:
+    - "**/*"
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-python-requirements
+  - serverless-iam-roles-per-function
+
+functions:
+  CleanUp:
+    handler: src/handler/clean_up.handler
+    # environment:
+    package:
+      include:
+        # - src/handler/
+    layers:
+      - {Ref: PythonRequirementsLambdaLayer}
+    # iamRoleStatementsName: ${ self:custom.service_base_name }GetK8sVolumes
+    # iamRoleStatements:
+    #   - Effect: Allow
+    #     Action:
+    #       - ec2:DescribeVolumes
+    #       - states:StartExecution
+    #     Resource: '*'
+    events:
+      - schedule: cron(0 19 * * ? *)
