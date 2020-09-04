@@ -1,0 +1,26 @@
+---
+Resources:
+  ScheduledEventRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: ${ self:custom.service_base_name }EventTriggerRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ${ self:custom.service_base_name }EventTriggerRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                Resource:
+                  - arn:aws:states:#{ AWS::Region }:#{ AWS::AccountId }:stateMachine:${ self:custom.service_base_name }StateMachine

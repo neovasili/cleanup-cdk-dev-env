@@ -1,0 +1,7 @@
+---
+Resources:
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/state-machine/${ self:custom.service_base_name }StateMachine
+      RetentionInDays: 14

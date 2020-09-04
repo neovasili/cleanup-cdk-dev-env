@@ -1,0 +1,52 @@
+---
+Resources:
+  StateMachineExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: ${ self:custom.service_base_name }ExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ${ self:custom.service_base_name }ExecutionRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - '*'
+              - Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:DescribeResourcePolicies
+                  - logs:ListLogDeliveries
+                  - logs:GetLogDelivery
+                  - logs:CreateLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:PutResourcePolicy
+                  - logs:DeleteLogDelivery
+                Resource:
+                  - '*'
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt CleanUpLogGroupsLambdaFunction.Arn
+                  - !Join ["", [!GetAtt CleanUpLogGroupsLambdaFunction.Arn, ":*"]]
+                  - !GetAtt GetCFNStacksLambdaFunction.Arn
+                  - !Join ["", [!GetAtt GetCFNStacksLambdaFunction.Arn, ":*"]]
+                  - !GetAtt DeleteCFNStackLambdaFunction.Arn
+                  - !Join ["", [!GetAtt DeleteCFNStackLambdaFunction.Arn, ":*"]]
+                  - !GetAtt GetCFNStackStatusLambdaFunction.Arn
+                  - !Join ["", [!GetAtt GetCFNStackStatusLambdaFunction.Arn, ":*"]]
