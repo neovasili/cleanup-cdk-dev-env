@@ -1,12 +1,12 @@
 ---
-service: juf-clean-cdk
+service: ${ opt:name }-clean-cdk
 frameworkVersion: ">=1.81.0"
 
 provider:
   name: aws
   runtime: python3.8
   stage: ${ opt:stage, staging }
-  region: ${ opt:aws-region, eu-west-1 }
+  region: ${ opt:region, eu-west-1 }
   timeout: 10
   memorySize: 128
   logRetentionInDays: 14
@@ -15,11 +15,15 @@ provider:
 custom:
   base_name: ${ self:service }-${ self:provider.stage }
   service_base_name: ${ self:custom.base_name }-
+  stacks_name_start_pattern: ${ opt:stack-prefix }
+  log_groups_name_pattern: ${ opt:log-group-prefix }
+  cfn_status_wait_time_in_seconds: 60
+  schedule_trigger_cron_expression: 0 19 ? * MON-FRI *
   pythonRequirements:
     pythonBin: /usr/bin/python3
     dockerizePip: non-linux
     layer:
-      name: ${ self:custom.service_base_name }
+      name: ${ self:custom.base_name }
       description: Python requirements lambda layer
       compatibleRuntimes:
         - python3.8
@@ -44,7 +48,7 @@ functions:
   CleanUpLogGroups:
     handler: src/handler/cleanup_log_groups.handler
     environment:
-      log_groups_name_pattern: /juf
+      log_groups_name_pattern: ${ self:custom.log_groups_name_pattern }
     package:
       include:
         - src/controller/cleanup_log_groups.py
@@ -64,7 +68,7 @@ functions:
   GetCFNStacks:
     handler: src/handler/get_cfn_stacks.handler
     environment:
-      stacks_name_start_pattern: juf
+      stacks_name_start_pattern: ${ self:custom.stacks_name_start_pattern }
       self_stack_name: ${ self:custom.base_name }
     package:
       include:
@@ -90,6 +94,8 @@ functions:
         - src/service/cloudformation.py
     layers:
       - {Ref: PythonRequirementsLambdaLayer}
+    # WARNING: this role it's extremely powerful as we prior don't know which resources must be deleted in
+    # the CFN delete action, but it's STRONGLY recommended to tight this role as much as possible
     iamRoleStatementsName: ${ self:custom.service_base_name }DeleteCFNStack
     iamRoleStatements:
       - Effect: Allow
@@ -139,15 +145,15 @@ stepFunctions:
               - Variable: "$.stacks_count"
                 NumericGreaterThan: 0
                 Next: DeleteCFNStack
-            Default: Done
+            Default: done
           DeleteCFNStack:
             Type: Task
             Resource: !GetAtt DeleteCFNStack.Arn
             ResultPath: "$"
-            Next: waitForContinue
-          waitForContinue:
+            Next: waitForStatusCheck
+          waitForStatusCheck:
             Type: Wait
-            Seconds: 60
+            Seconds: ${ self:custom.cfn_status_wait_time_in_seconds }
             Next: GetCFNStackStatus
           GetCFNStackStatus:
             Type: Task
@@ -160,18 +166,20 @@ stepFunctions:
               - Variable: "$.status"
                 StringEquals: DELETE_COMPLETE
                 Next: hasMorePendingStacks?
-            Default: waitForRetry
-          waitForRetry:
-            Type: Wait
-            Seconds: 60
-            Next: GetCFNStackStatus
-          Done:
+              - Variable: "$.status"
+                StringEquals: DELETE_IN_PROGRESS
+                Next: waitForStatusCheck
+            Default: invalidCFNStatus
+          invalidCFNStatus:
+            Type: Fail
+            Cause: Invalid CloudFormation stack state
+          done:
             Type: Pass
             End: true
       events:
         - schedule:
             name: ${ self:custom.service_base_name }
-            rate: cron(0 19 * * ? *)
+            rate: cron(${ self:custom.schedule_trigger_cron_expression })
             enabled: true
             role: !GetAtt ScheduledEventRuleRole.Arn
       loggingConfig:
