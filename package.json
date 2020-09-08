@@ -1,0 +1,33 @@
+{
+  "name": "clean-cdk-dev",
+  "version": "1.0.0",
+  "description": "Tool for remove development environment CDK resources in a schedule basis",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neovasili/cleanup-cdk-dev-env.git"
+  },
+  "keywords": [
+    "serverless",
+    "aws",
+    "cdk"
+  ],
+  "author": "Juan Manuel Ruiz Fernández",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/neovasili/cleanup-cdk-dev-env/issues"
+  },
+  "homepage": "https://github.com/neovasili/cleanup-cdk-dev-env#readme",
+  "devDependencies": {
+    "serverless-iam-roles-per-function": "^2.0.2",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-python-requirements": "^5.1.0",
+    "serverless-step-functions": "^2.23.0"
+  }
+}

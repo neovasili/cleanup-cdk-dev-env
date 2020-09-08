@@ -1,6 +1,7 @@
 ---
 service: ${ opt:name }-clean-cdk
 frameworkVersion: ">=1.81.0"
+enableLocalInstallationFallback: true
 
 provider:
   name: aws
