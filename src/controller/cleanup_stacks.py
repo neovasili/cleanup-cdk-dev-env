@@ -11,9 +11,21 @@ class CleanUpStacksController():
 
     stack_names = list()
     for stack in stacks or []:
-      stack_names.append(stack.get_name())
+      stack_name = stack.get_name()
+      if self.check_cdk_stack(stack_name):
+        stack_names.append(stack_name)
 
     return stack_names
+
+  def check_cdk_stack(self, stack_name: str):
+    stack_resources = self.__cloudformation_service.get_stack_resources(stack_name)
+
+    for resource in stack_resources or []:
+      resource_type = resource['ResourceType']
+      if resource_type == 'AWS::CDK::Metadata':
+        return True
+
+    return False
 
   def delete_developer_stack(self, stack_name: str):
     self.__cloudformation_service.delete_stack(stack_name)

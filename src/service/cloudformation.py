@@ -24,6 +24,15 @@ class CloudFormationService(BotoHelper):
 
     return stacks
 
+  def get_stack_resources(self, stack_name: str):
+    response = self.client.describe_stack_resources(StackName=stack_name)
+
+    stack_resources = list()
+    if 'StackResources' in response:
+      stack_resources = response['StackResources']
+
+    return stack_resources
+
   def get_stack_status(self, stack_name: str):
     stack_status = "DELETE_COMPLETE"
 
