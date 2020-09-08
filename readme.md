@@ -83,6 +83,7 @@ And you can test it's working with the following:
 
 ```bash
 ➜ pre-commit run --all-files
+
 Check for added large files..............................................Passed
 Check for case conflicts.................................................Passed
 Check that executables have shebangs.................(no files to check)Skipped
@@ -100,4 +101,25 @@ Python unit tests........................................................Passed
 
 ### Operation
 
-//TODO
+This service has the following mandatory cli parameters:
+
+|Parameter|Description|
+|:--:|:--:|
+|`stage`|Serverless application stage|
+|`region`|AWS region to be deployed to|
+|`name`|Name prefix for the service and all its components|
+|`stack-prefix`|Prefix of the stacks to search for delete. Case sensitive|
+|`log-group-prefix`|Prefix of the log groups to search for delete. Case sensitive|
+
+Other relevant optional configuration parameters in the serverless yaml:
+
+|Parameter|Default value|Description|
+|:--:|:--:|:--:|
+|`cfn_status_wait_time_in_seconds`|60|Time to wait for retrieve CloudFromation stack status retry in seconds|
+|`schedule_trigger_cron_expression`|0 19 ? * MON-FRI *|Schedule cron expression to execute the application|
+
+Here is an example of the deploy command:
+
+```bash
+sls deploy --stage dev --region eu-west-1 --name neovasili --stack-prefix neovasili --log-group-prefix neovasili
+```
