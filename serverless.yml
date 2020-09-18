@@ -84,6 +84,7 @@ functions:
       - Effect: Allow
         Action:
           - cloudformation:DescribeStacks
+          - cloudformation:DescribeStackResources
         Resource: '*'
   DeleteCFNStack:
     handler: src/handler/delete_cfn_stack.handler
