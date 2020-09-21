@@ -3,9 +3,14 @@ from src.service.cloudformation import CloudFormationService
 
 class CleanUpStacksController():
 
+  def __init__(self):
+    super().__init__()
+    self.cloudformation_service = CloudFormationService()
+
+class CleanUpStacksControllerRetriever(CleanUpStacksController):
+
   def __init__(self, name_pattern: str, self_stack_name: str):
     super().__init__()
-    self.__cloudformation_service = CloudFormationService()
     self.__name_pattern = name_pattern
     self.__self_stack_name = self_stack_name
 
@@ -25,7 +30,7 @@ class CleanUpStacksController():
     stack_name = stack_resource['StackName']
     resource_logical_id = stack_resource['LogicalResourceId']
 
-    resource_detail = self.__cloudformation_service.get_stack_resource_detail(
+    resource_detail = self.cloudformation_service.get_stack_resource_detail(
       stack_name,
       resource_logical_id
     )
@@ -39,7 +44,7 @@ class CleanUpStacksController():
     return False
 
   def __check_is_cdk_stack(self, stack_name: str):
-    stack_resources = self.__cloudformation_service.get_stack_resources(stack_name)
+    stack_resources = self.cloudformation_service.get_stack_resources(stack_name)
 
     for resource in stack_resources or []:
       if self.__check_cdk_metadata_resource(resource) or \
@@ -53,7 +58,7 @@ class CleanUpStacksController():
     return stack.get_retention_policy() != 'RETAIN'
 
   def get_developer_stacks_to_delete(self):
-    stacks = self.__cloudformation_service.get_developer_stacks()
+    stacks = self.cloudformation_service.get_developer_stacks()
 
     stack_names = list()
     for stack in stacks or []:
@@ -66,8 +71,12 @@ class CleanUpStacksController():
 
     return stack_names
 
+class CleanUpStacksControllerDeleter(CleanUpStacksController):
+
   def delete_developer_stack(self, stack_name: str):
-    self.__cloudformation_service.delete_stack(stack_name)
+    self.cloudformation_service.delete_stack(stack_name)
+
+class CleanUpStacksControllerChecker(CleanUpStacksController):
 
   def get_status(self, stack_name: str):
-    return self.__cloudformation_service.get_stack_status(stack_name)
+    return self.cloudformation_service.get_stack_status(stack_name)
