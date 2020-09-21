@@ -24,6 +24,20 @@ The `GetCFNStacks` task will produce a list of call CloudFormation stacks with a
 
 Inside the loop, the first thing to do is to delete the stack. Then it will wait for a while (60 seconds by default) and retrieve stack status. If the status is `DELETE_IN_PROGRESS`, the will wait again and retrieve status again after the wait action. If the status is `DELETE_COMPLETE`, it will go to the next stack, in any case else, the state machine will fail.
 
+### Retaining stacks
+
+Sometimes, maybe we don't want to delete certain stacks because they have external dependencies that must be managed manually or maybe the resources provisioned by the stack contains data that we want to preserve between development sessions.
+
+For this purpose, a new feature since [v1.1.0](https://github.com/neovasili/cleanup-cdk-dev-env/releases/tag/v1.1.0) let the developer define stack tags to avoid it's automatic deletion.
+
+To do this, add the following tag to those stacks that you want to retain:
+
+|Tag Key|Tag Value|
+|:--:|:--:|
+|`RetentionPolicy`|`RETAIN`|
+
+The tool will remove from the stacks deletion list all the stacks containing this tag.
+
 ## Requirements
 
 * [Nodejs](https://nodejs.org/en/)

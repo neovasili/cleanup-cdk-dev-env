@@ -1,4 +1,4 @@
-from src.controller.cleanup_stacks import CleanUpStacksController
+from src.controller.cleanup_stacks import CleanUpStacksControllerChecker
 
 def handler(event, context):
   str(context)
@@ -6,7 +6,7 @@ def handler(event, context):
   to_delete_stacks = event['to_delete_stacks']
   stack_name = event['deleted_stack']
 
-  cleanup_controller = CleanUpStacksController()
+  cleanup_controller = CleanUpStacksControllerChecker()
   status = cleanup_controller.get_status(stack_name=stack_name)
 
   response = {

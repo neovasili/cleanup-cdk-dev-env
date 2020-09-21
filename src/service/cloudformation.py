@@ -8,19 +8,18 @@ class CloudFormationService(BotoHelper):
   def __init__(self, region: str = "eu-west-1"):
     super().__init__('cloudformation', region)
 
-  def get_developer_stacks(self, name_pattern: str, self_stack_name: str):
+  def get_developer_stacks(self):
     response = self.client.describe_stacks()
 
     stacks = list()
     for stack in response['Stacks'] or []:
-      stack_name = stack['StackName']
-      if stack_name.startswith(name_pattern) and stack_name != self_stack_name:
-        stack_element = CloudFormationStack(
-          stack_id=stack['StackId'],
-          name=stack_name,
-          creation_time=stack['CreationTime'].strftime("%Y-%m-%d %H:%M:%S")
-        )
-        stacks.append(stack_element)
+      stack_element = CloudFormationStack(
+        stack_id=stack['StackId'],
+        name=stack['StackName'],
+        creation_time=stack['CreationTime'].strftime("%Y-%m-%d %H:%M:%S"),
+        tags=stack['Tags']
+      )
+      stacks.append(stack_element)
 
     return stacks
 
@@ -56,6 +55,7 @@ class CloudFormationService(BotoHelper):
       if 'Stacks' in response:
         first_stack = response['Stacks'][0]
         stack_status = first_stack['StackStatus']
+
     except ClientError:
       print("Stack already deleted")
 

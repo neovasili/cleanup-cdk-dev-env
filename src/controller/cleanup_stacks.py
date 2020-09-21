@@ -1,21 +1,24 @@
+from src.model.cloudformation import CloudFormationStack
 from src.service.cloudformation import CloudFormationService
 
 class CleanUpStacksController():
 
   def __init__(self):
     super().__init__()
-    self.__cloudformation_service = CloudFormationService()
+    self.cloudformation_service = CloudFormationService()
 
-  def get_developer_stacks(self, name_pattern: str, self_stack_name: str):
-    stacks = self.__cloudformation_service.get_developer_stacks(name_pattern, self_stack_name)
+class CleanUpStacksControllerRetriever(CleanUpStacksController):
 
-    stack_names = list()
-    for stack in stacks or []:
-      stack_name = stack.get_name()
-      if self.check_cdk_stack(stack_name):
-        stack_names.append(stack_name)
+  def __init__(self, name_pattern: str, self_stack_name: str):
+    super().__init__()
+    self.__name_pattern = name_pattern
+    self.__self_stack_name = self_stack_name
 
-    return stack_names
+  def __check_stack_name_filter(self, stack_name: str):
+    return stack_name.startswith(self.__name_pattern)
+
+  def __check_self_stack_name_filter(self, stack_name: str):
+    return stack_name != self.__self_stack_name
 
   @classmethod
   def __check_cdk_metadata_resource(cls, stack_resource: dict):
@@ -27,7 +30,7 @@ class CleanUpStacksController():
     stack_name = stack_resource['StackName']
     resource_logical_id = stack_resource['LogicalResourceId']
 
-    resource_detail = self.__cloudformation_service.get_stack_resource_detail(
+    resource_detail = self.cloudformation_service.get_stack_resource_detail(
       stack_name,
       resource_logical_id
     )
@@ -40,8 +43,8 @@ class CleanUpStacksController():
 
     return False
 
-  def check_cdk_stack(self, stack_name: str):
-    stack_resources = self.__cloudformation_service.get_stack_resources(stack_name)
+  def __check_is_cdk_stack(self, stack_name: str):
+    stack_resources = self.cloudformation_service.get_stack_resources(stack_name)
 
     for resource in stack_resources or []:
       if self.__check_cdk_metadata_resource(resource) or \
@@ -50,8 +53,30 @@ class CleanUpStacksController():
 
     return False
 
+  @classmethod
+  def __check_retention_policy(cls, stack: CloudFormationStack):
+    return stack.get_retention_policy() != 'RETAIN'
+
+  def get_developer_stacks_to_delete(self):
+    stacks = self.cloudformation_service.get_developer_stacks()
+
+    stack_names = list()
+    for stack in stacks or []:
+      stack_name = stack.get_name()
+      if self.__check_self_stack_name_filter(stack_name) and \
+          self.__check_stack_name_filter(stack_name) and \
+          self.__check_is_cdk_stack(stack_name) and \
+          self.__check_retention_policy(stack):
+        stack_names.append(stack_name)
+
+    return stack_names
+
+class CleanUpStacksControllerDeleter(CleanUpStacksController):
+
   def delete_developer_stack(self, stack_name: str):
-    self.__cloudformation_service.delete_stack(stack_name)
+    self.cloudformation_service.delete_stack(stack_name)
+
+class CleanUpStacksControllerChecker(CleanUpStacksController):
 
   def get_status(self, stack_name: str):
-    return self.__cloudformation_service.get_stack_status(stack_name)
+    return self.cloudformation_service.get_stack_status(stack_name)
