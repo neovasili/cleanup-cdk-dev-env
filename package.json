@@ -1,6 +1,6 @@
 {
   "name": "clean-cdk-dev",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Tool for remove development environment CDK resources in a schedule basis",
   "main": "index.js",
   "directories": {
