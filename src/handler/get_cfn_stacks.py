@@ -9,11 +9,11 @@ def handler(event, context):
   str(event)
   str(context)
 
-  cleanup_controller = CleanUpStacksController()
-  to_delete_stacks = cleanup_controller.get_developer_stacks(
+  cleanup_controller = CleanUpStacksController(
     name_pattern=STACKS_NAME_PATTERN,
     self_stack_name=SELF_STACK_NAME
   )
+  to_delete_stacks = cleanup_controller.get_developer_stacks_to_delete()
 
   response = {
     "to_delete_stacks": to_delete_stacks,
