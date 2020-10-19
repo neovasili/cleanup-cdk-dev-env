@@ -16,7 +16,7 @@ provider:
 custom:
   base_name: ${ self:service }-${ self:provider.stage }
   service_base_name: ${ self:custom.base_name }-
-  stacks_name_start_pattern: ${ opt:stack-prefix }
+  stacks_name_start_patterns: ${ opt:stack-prefixes }
   log_groups_name_pattern: ${ opt:log-group-prefix }
   cfn_status_wait_time_in_seconds: 60
   schedule_trigger_cron_expression: 0 19 ? * MON-FRI *
@@ -69,7 +69,7 @@ functions:
   GetCFNStacks:
     handler: src/handler/get_cfn_stacks.handler
     environment:
-      stacks_name_start_pattern: ${ self:custom.stacks_name_start_pattern }
+      stacks_name_start_patterns: ${ self:custom.stacks_name_start_patterns }
       self_stack_name: ${ self:custom.base_name }
     package:
       include:
