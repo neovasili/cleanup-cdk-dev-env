@@ -9,13 +9,17 @@ class CleanUpStacksController():
 
 class CleanUpStacksControllerRetriever(CleanUpStacksController):
 
-  def __init__(self, name_pattern: str, self_stack_name: str):
+  def __init__(self, name_patterns: str, self_stack_name: str):
     super().__init__()
-    self.__name_pattern = name_pattern
+    self.__name_patterns = name_patterns
     self.__self_stack_name = self_stack_name
 
   def __check_stack_name_filter(self, stack_name: str):
-    return stack_name.startswith(self.__name_pattern)
+    for stack_name_pattern in self.__name_patterns:
+      if stack_name.startswith(stack_name_pattern):
+        return True
+
+    return False
 
   def __check_self_stack_name_filter(self, stack_name: str):
     return stack_name != self.__self_stack_name

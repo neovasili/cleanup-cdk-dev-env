@@ -6,7 +6,7 @@ This is a small serverless application project that can be easy used to automati
 
 ## Description
 
-The deployed application will be executed in a scheduled basis (e.g. once per day during working days) and it **will remove first all CloudWatch log groups** according to the specified log groups prefix and later **will remove all CloudFormation stacks** with another specified prefix.
+The deployed application will be executed in a scheduled basis (e.g. once per day during working days) and it **will remove first all CloudWatch log groups** according to the specified log groups prefix and later **will remove all CloudFormation stacks** with one of the specified prefixes.
 
 The removal of CloudWatch log groups it's almost instantaneous, but in the case of the CloudFormation stacks, this can take a lot of time depending on the resources provisioned by each stack and the number of stacks to be removed.
 
@@ -20,7 +20,7 @@ Each capitalized name box it's the representation of a `task`, thus a Lambda fun
 
 The `CleanUpLogGroups` task produce a list of all CloudWatch log groups with a match on the prefix provided by the `log-group-prefix` parameter and at the end, will remove all of them.
 
-The `GetCFNStacks` task will produce a list of call CloudFormation stacks with a match on the prefix provided by the `stack-prefix` parameter. Then a loop will be started to process each element of the stacks list.
+The `GetCFNStacks` task will produce a list of call CloudFormation stacks with a match on the prefixes provided by the `stack-prefixes` parameter. Then a loop will be started to process each element of the stacks list.
 
 Inside the loop, the first thing to do is to delete the stack. Then it will wait for a while (60 seconds by default) and retrieve stack status. If the status is `DELETE_IN_PROGRESS`, the will wait again and retrieve status again after the wait action. If the status is `DELETE_COMPLETE`, it will go to the next stack, in any case else, the state machine will fail.
 
@@ -122,7 +122,7 @@ This service has the following mandatory cli parameters:
 |`stage`|Serverless application stage|
 |`region`|AWS region to be deployed to|
 |`name`|Name prefix for the service and all its components|
-|`stack-prefix`|Prefix of the stacks to search for delete. Case sensitive|
+|`stack-prefixes`|Coma separated prefixes list of the stacks to search for delete. Case sensitive|
 |`log-group-prefix`|Prefix of the log groups to search for delete. Case sensitive|
 
 Other relevant optional configuration parameters in the serverless yaml:
@@ -135,5 +135,5 @@ Other relevant optional configuration parameters in the serverless yaml:
 Here is an example of the deploy command:
 
 ```bash
-sls deploy --stage dev --region eu-west-1 --name neovasili --stack-prefix neovasili --log-group-prefix neovasili
+sls deploy --stage dev --region eu-west-1 --name neovasili --stack-prefixes neovasili,neovasili-2 --log-group-prefix neovasili
 ```
